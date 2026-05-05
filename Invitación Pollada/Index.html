@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Invitación</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:wght@300;400;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --gold: #c9a84c; --gold-light: #e8cc7a; --cream: #fdf6e3; --brown: #5c3d1e; }
+    body {
+      min-height: 100vh;
+      background: radial-gradient(ellipse at 60% 40%, #2a1a06 0%, #0d0905 100%);
+      display: flex; flex-direction: column; align-items: center;
+      font-family: 'Cormorant Garamond', serif;
+      padding: 40px 20px 60px; overflow-x: hidden;
+    }
+ 
+    /* PARTÍCULAS */
+    .particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+    .particle { position: absolute; background: var(--gold-light); border-radius: 50%; animation: floatUp linear infinite; opacity: 0; }
+    @keyframes floatUp {
+      0% { transform: translateY(100vh) scale(0); opacity: 0; }
+      10% { opacity: 0.5; } 90% { opacity: 0.2; }
+      100% { transform: translateY(-10vh) scale(1.5); opacity: 0; }
+    }
+ 
+    /* TÍTULO */
+    .page-title { text-align: center; margin-bottom: 44px; position: relative; z-index: 10; }
+    .page-title h1 { font-family: 'Playfair Display', serif; font-size: clamp(1.8rem, 5vw, 3rem); color: var(--gold); letter-spacing: 0.12em; text-shadow: 0 0 30px rgba(201,168,76,0.4); }
+    .page-title p { color: rgba(232,204,122,0.6); font-size: 0.9rem; letter-spacing: 0.28em; margin-top: 8px; animation: pulse 2.5s ease-in-out infinite; transition: opacity 0.5s; }
+    .page-title p.hidden { opacity: 0; }
+    @keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
+ 
+    /* SOBRE */
+    .envelope-scene { position: relative; z-index: 10; perspective: 1200px; }
+    .envelope { position: relative; width: min(420px, 90vw); height: 270px; transform-style: preserve-3d; cursor: pointer; transition: transform 0.3s ease; }
+    .envelope:hover:not(.opened) { transform: translateY(-6px) rotateX(3deg); }
+    .envelope.opened { cursor: default; }
+    .env-body {
+      position: absolute; inset: 0;
+      background: linear-gradient(160deg, #f5e6c8 0%, #e8d4a0 60%, #d4b870 100%);
+      border-radius: 4px 4px 8px 8px;
+      box-shadow: 0 25px 55px rgba(0,0,0,0.55), 0 0 0 1px rgba(201,168,76,0.4), inset 0 1px 0 rgba(255,255,255,0.3);
+    }
+    .env-body::before {
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 60%;
+      background: linear-gradient(180deg, #e8d4a0 0%, #c9a84c 100%);
+      clip-path: polygon(0 0, 50% 55%, 100% 0, 100% 100%, 0 100%);
+    }
+    .env-body::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(212,184,112,0.7) 0%, transparent 45%), linear-gradient(225deg, rgba(212,184,112,0.7) 0%, transparent 45%);
+    }
+    .seal {
+      position: absolute; bottom: 78px; left: 50%; transform: translateX(-50%);
+      width: 58px; height: 58px;
+      background: radial-gradient(circle, #8b1a1a 0%, #5c0e0e 100%);
+      border-radius: 50%; border: 3px solid var(--gold);
+      display: flex; align-items: center; justify-content: center; z-index: 5;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4), 0 0 0 2px rgba(201,168,76,0.3);
+      font-size: 1.5rem; transition: transform 0.45s ease, opacity 0.45s ease;
+    }
+    .envelope.opened .seal { transform: translateX(-50%) scale(0); opacity: 0; }
+    .env-flap { position: absolute; top: 0; left: 0; right: 0; height: 50%; transform-origin: top center; transform-style: preserve-3d; transition: transform 0.85s cubic-bezier(0.4, 0, 0.2, 1); z-index: 10; }
+    .env-flap-inner { width: 100%; height: 100%; background: linear-gradient(180deg, #e0c870 0%, #c9a84c 100%); clip-path: polygon(0 0, 50% 100%, 100% 0); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+    .envelope.opened .env-flap { transform: rotateX(-180deg); }
+ 
+    /* TARJETA */
+    .invite-card-wrapper { position: relative; z-index: 9; width: min(420px, 90vw); max-height: 0; overflow: hidden; }
+    .invite-card {
+      background: var(--cream); border-radius: 0 0 10px 10px;
+      box-shadow: 0 30px 70px rgba(0,0,0,0.55), 0 0 0 1px rgba(201,168,76,0.2);
+      overflow: hidden; transform: translateY(-24px); opacity: 0;
+      transition: transform 0.85s cubic-bezier(0.34, 1.4, 0.64, 1) 0.5s, opacity 0.6s ease 0.5s;
+    }
+    .invite-card-wrapper.revealed .invite-card { transform: translateY(0); opacity: 1; }
+    .card-photo { width: 100%; height: auto; object-fit: contain; display: block; }
+    .photo-placeholder { width: 100%; height: 200px; background: linear-gradient(135deg, #e8d4a0 0%, #c9a84c 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--brown); font-size: 0.8rem; letter-spacing: 0.18em; text-align: center; }
+    .photo-placeholder .icon { font-size: 2.4rem; margin-bottom: 8px; }
+    .card-body { padding: 28px 28px 32px; text-align: center; }
+    .card-ornament { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .card-ornament::before, .card-ornament::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+    .card-ornament span { color: var(--gold); font-size: 1rem; }
+    .card-body h2 { font-family: 'Playfair Display', serif; font-size: 2.6rem; color: var(--brown); margin-bottom: 6px; }
+    .card-body .subtitle { font-size: 1.4rem; letter-spacing: 0.28em; color: var(--gold); text-transform: uppercase; margin-bottom: 16px; }
+    .card-divider { width: 50px; height: 1.5px; background: var(--gold); margin: 14px auto; }
+    .card-body .details { font-size: 1.5rem; color: #7a5c38; line-height: 2; font-weight: 600; }
+ 
+    /* ═══════════════════════════
+       BEBIDAS — tarjetas 3D flip
+    ═══════════════════════════ */
+    .drinks-section {
+      position: relative; z-index: 10;
+      width: min(740px, 95vw); margin-top: 60px;
+      opacity: 0; transform: translateY(36px);
+      transition: opacity 0.75s ease, transform 0.75s ease;
+    }
+    .drinks-section.visible { opacity: 1; transform: translateY(0); }
+ 
+    .drinks-header { text-align: center; margin-bottom: 36px; }
+    .drinks-header h2 { font-family: 'Playfair Display', serif; font-size: clamp(1.5rem,4vw,2.2rem); color: var(--gold); letter-spacing: 0.1em; }
+    .drinks-header p { color: rgba(232,204,122,0.5); font-size: 0.82rem; letter-spacing: 0.28em; margin-top: 6px; }
+    .section-line { display: flex; align-items: center; gap: 14px; margin: 12px auto 0; max-width: 280px; }
+    .section-line::before, .section-line::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+    .section-line span { color: var(--gold); font-size: 1rem; }
+ 
+    .drinks-category { margin-bottom: 44px; }
+    .category-label {
+      font-family: 'Playfair Display', serif; font-size: 0.9rem;
+      color: var(--gold-light); letter-spacing: 0.3em; text-transform: uppercase;
+      margin-bottom: 20px; text-align: center;
+      display: flex; align-items: center; gap: 10px; justify-content: center;
+    }
+    .category-label::before { content: ''; width: 50px; height: 1px; background: linear-gradient(90deg, transparent, var(--gold)); }
+    .category-label::after  { content: ''; width: 50px; height: 1px; background: linear-gradient(90deg, var(--gold), transparent); }
+ 
+    .drinks-grid { display: flex; flex-wrap: wrap; gap: 22px; justify-content: center; align-items: stretch; }
+ 
+    /* Tarjeta 3D */
+    .drink-3d { perspective: 900px; height: 250px; width: 165px; cursor: pointer; flex-shrink: 0; }
+    .drink-3d-large { width: 240px; height: 300px; }
+    .drink-3d-inner {
+      position: relative; width: 100%; height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 0.75s cubic-bezier(0.4, 0.2, 0.2, 1);
+      filter: drop-shadow(0 16px 26px rgba(0,0,0,0.6));
+    }
+    .drink-3d:hover .drink-3d-inner { transform: rotateY(180deg); }
+ 
+    .drink-front, .drink-back {
+      position: absolute; inset: 0; border-radius: 18px;
+      backface-visibility: hidden; -webkit-backface-visibility: hidden;
+      overflow: hidden;
+    }
+ 
+    /* FRENTE */
+    .drink-front {
+      background: linear-gradient(145deg, #1c1105 0%, #2d1a08 100%);
+      border: 1px solid rgba(201,168,76,0.3);
+      display: flex; flex-direction: column;
+    }
+    .drink-front::after {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 55%;
+      background: linear-gradient(180deg, rgba(255,255,255,0.07) 0%, transparent 100%);
+      pointer-events: none; border-radius: 18px 18px 0 0; z-index: 1;
+    }
+ 
+    /* Zona imagen */
+    .drink-img-zone {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      background: radial-gradient(ellipse at 50% 30%, rgba(201,168,76,0.08) 0%, transparent 70%);
+      overflow: hidden; position: relative;
+    }
+    .drink-img-zone img {
+      max-width: 88%; max-height: 88%;
+      object-fit: contain; padding: 10px;
+      filter: drop-shadow(0 10px 20px rgba(0,0,0,0.7));
+      transition: transform 0.4s ease;
+    }
+    .drink-3d:hover .drink-img-zone img { transform: scale(1.06); }
+ 
+    /* Placeholder imagen */
+    .drink-ph {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      width: 100%; height: 100%; gap: 8px;
+      color: rgba(201,168,76,0.3); font-size: 0.62rem;
+      letter-spacing: 0.16em; text-transform: uppercase; text-align: center; padding: 12px;
+    }
+    .drink-ph-icon { font-size: 3rem; opacity: 0.3; }
+ 
+    /* Info pie */
+    .drink-info {
+      padding: 10px 14px 13px;
+      background: linear-gradient(0deg, rgba(0,0,0,0.55) 0%, transparent 100%);
+      border-top: 1px solid rgba(201,168,76,0.12);
+    }
+    .drink-name { font-family: 'Playfair Display', serif; font-size: 0.93rem; color: var(--gold-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .drink-sub { font-size: 0.62rem; color: rgba(232,204,122,0.38); letter-spacing: 0.1em; margin-top: 2px; }
+ 
+    /* REVERSO */
+    .drink-back {
+      transform: rotateY(180deg);
+      background: linear-gradient(145deg, #260f00 0%, #180a00 100%);
+      border: 1px solid rgba(201,168,76,0.45);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 10px; padding: 22px 16px; text-align: center;
+    }
+    .back-icon { font-size: 2.8rem; line-height: 1; }
+    .back-title { font-family: 'Playfair Display', serif; font-size: 1.05rem; color: var(--gold); }
+    .back-desc { font-size: 0.72rem; color: rgba(232,204,122,0.55); line-height: 1.55; }
+    .back-tag { padding: 3px 12px; border-radius: 20px; font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; border: 1px solid; margin-top: 4px; }
+    .tag-beer { color: #f5c842; border-color: rgba(245,200,66,0.45); background: rgba(245,200,66,0.08); }
+    .tag-soda { color: #7ce8c4; border-color: rgba(124,232,196,0.45); background: rgba(124,232,196,0.08); }
+ 
+    /* Hint giro */
+    .flip-hint { font-size: 0.6rem; color: rgba(201,168,76,0.28); letter-spacing: 0.08em; margin-top: 4px; }
+ 
+    .footer-note { margin-top: 50px; text-align: center; color: rgba(201,168,76,0.3); font-size: 0.72rem; letter-spacing: 0.26em; position: relative; z-index: 10; }
+  </style>
+</head>
+<body>
+ 
+  <div class="particles" id="particles"></div>
+ 
+  <div class="page-title">
+    <h1>¡Estás Invitado!</h1>
+    <p id="hint">✦ &nbsp; haz clic sobre el sobre para abrir &nbsp; ✦</p>
+  </div>
+ 
+  <!-- SOBRE -->
+  <div class="envelope-scene">
+    <div class="envelope" id="envelope">
+      <div class="env-flap"><div class="env-flap-inner"></div></div>
+      <div class="env-body"></div>
+      <div class="seal">✦</div>
+    </div>
+  </div>
+ 
+  <!-- TARJETA debajo del sobre -->
+  <div class="invite-card-wrapper" id="cardWrapper">
+    <div class="invite-card">
+      <img class="card-photo" src="InvitacionPollada.jpg" alt="Gran Pollada Pro Salud"
+           onerror="this.style.display='none'; document.getElementById('photoPlaceholder').style.display='flex';"/>
+      <div class="photo-placeholder" id="photoPlaceholder" style="display:none;">
+        <span class="icon">🖼️</span>
+        Coloca InvitacionPollada.jpg en la misma carpeta
+      </div>
+      <div class="card-body">
+        <div class="card-ornament"><span>✦</span></div>
+        <h2>Gran Pollada Pro Salud</h2>
+        <p class="subtitle">Teófilo Palacios</p>
+        <div class="card-divider"></div>
+        <p class="details">
+          📅 Sábado 16 &nbsp;·&nbsp; 10:00 AM<br>
+          📍 Carretera Central Paradero<br>San Juan de Parriachi<br>
+          🍗 Precio: S/. 20.00
+        </p>
+        <div class="card-ornament" style="margin-top:18px;margin-bottom:0"><span>✦</span></div>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- BEBIDAS 3D -->
+  <div class="drinks-section" id="drinks">
+    <div class="drinks-header">
+      <h2>Bebidas Disponibles</h2>
+      <p>Pasa el cursor para ver más · Hover to flip</p>
+      <div class="section-line"><span>🍺</span></div>
+    </div>
+ 
+    <!-- CERVEZAS — 1 tarjeta grande centrada -->
+    <div class="drinks-category">
+      <div class="category-label">🍺 Cervezas</div>
+      <div class="drinks-grid">
+ 
+        <div class="drink-3d drink-3d-large">
+          <div class="drink-3d-inner">
+            <div class="drink-front">
+              <div class="drink-img-zone">
+                <!--
+                  Coloca tu imagen en la misma carpeta
+                  y cambia "cerveza1.png" por su nombre
+                -->
+                <img src="cerveza1.png" alt="Cerveza"
+                     onerror="this.parentElement.innerHTML='<div class=\'drink-ph\'><span class=\'drink-ph-icon\'>🍺</span>Agrega cerveza1.png</div>'"/>
+              </div>
+              <div class="drink-info">
+                <div class="drink-name">Cerveza</div>
+                <div class="drink-sub">Pasa el cursor para ver</div>
+              </div>
+            </div>
+            <div class="drink-back">
+              <span class="back-icon">🍺</span>
+              <div class="back-title">Cerveza</div>
+              <div class="back-desc">Edita aquí la marca y descripción de tu cerveza</div>
+              <span class="back-tag tag-beer">Con Alcohol</span>
+              <div class="flip-hint">↩ vuelve al pasar</div>
+            </div>
+          </div>
+        </div>
+ 
+      </div>
+    </div>
+ 
+    <!-- GASEOSAS — 2 tarjetas centradas -->
+    <div class="drinks-category">
+      <div class="category-label">🥤 Gaseosas</div>
+      <div class="drinks-grid">
+ 
+        <div class="drink-3d">
+          <div class="drink-3d-inner">
+            <div class="drink-front">
+              <div class="drink-img-zone">
+                <!--
+                  Coloca tu imagen en la misma carpeta
+                  y cambia "gaseosa1.png" por su nombre
+                -->
+                <img src="gaseosa1.png" alt="Gaseosa 1"
+                     onerror="this.parentElement.innerHTML='<div class=\'drink-ph\'><span class=\'drink-ph-icon\'>🥤</span>Agrega gaseosa1.png</div>'"/>
+              </div>
+              <div class="drink-info">
+                <div class="drink-name">Gaseosa</div>
+                <div class="drink-sub">Pasa el cursor para ver</div>
+              </div>
+            </div>
+            <div class="drink-back">
+              <span class="back-icon">🥤</span>
+              <div class="back-title">Gaseosa</div>
+              <div class="back-desc">Edita aquí el nombre y descripción de tu gaseosa</div>
+              <span class="back-tag tag-soda">Sin Alcohol</span>
+              <div class="flip-hint">↩ vuelve al pasar</div>
+            </div>
+          </div>
+        </div>
+ 
+        <div class="drink-3d">
+          <div class="drink-3d-inner">
+            <div class="drink-front">
+              <div class="drink-img-zone">
+                <img src="gaseosa2.png" alt="Gaseosa 2"
+                     onerror="this.parentElement.innerHTML='<div class=\'drink-ph\'><span class=\'drink-ph-icon\'>🥤</span>Agrega gaseosa2.png</div>'"/>
+              </div>
+              <div class="drink-info">
+                <div class="drink-name">Gaseosa</div>
+                <div class="drink-sub">Pasa el cursor para ver</div>
+              </div>
+            </div>
+            <div class="drink-back">
+              <span class="back-icon">🥤</span>
+              <div class="back-title">Gaseosa</div>
+              <div class="back-desc">Edita aquí el nombre y descripción</div>
+              <span class="back-tag tag-soda">Sin Alcohol</span>
+              <div class="flip-hint">↩ vuelve al pasar</div>
+            </div>
+          </div>
+        </div>
+ 
+      </div>
+    </div>
+ 
+  </div><!-- /drinks-section -->
+ 
+  <p class="footer-note">✦ &nbsp; Te esperamos &nbsp; ✦</p>
+ 
+  <script>
+    /* Partículas */
+    const pc = document.getElementById('particles');
+    for (let i = 0; i < 40; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.cssText = `left:${Math.random()*100}%;width:${1+Math.random()*3}px;height:${1+Math.random()*3}px;animation-duration:${7+Math.random()*12}s;animation-delay:${Math.random()*10}s;`;
+      pc.appendChild(p);
+    }
+ 
+    /* Abrir sobre */
+    const envelope    = document.getElementById('envelope');
+    const cardWrapper = document.getElementById('cardWrapper');
+    const drinks      = document.getElementById('drinks');
+    const hint        = document.getElementById('hint');
+    let opened = false;
+ 
+    envelope.addEventListener('click', () => {
+      if (opened) return;
+      opened = true;
+      envelope.classList.add('opened');
+      hint.classList.add('hidden');
+ 
+      setTimeout(() => {
+        cardWrapper.style.transition = 'max-height 0.6s ease';
+        cardWrapper.style.maxHeight  = '1200px';
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          cardWrapper.classList.add('revealed');
+        }));
+      }, 480);
+ 
+      setTimeout(() => drinks.classList.add('visible'), 1600);
+    });
+ 
+    /* Flip táctil para móviles */
+    document.querySelectorAll('.drink-3d').forEach(card => {
+      card.addEventListener('click', () => {
+        card.querySelector('.drink-3d-inner').style.transform =
+          card.querySelector('.drink-3d-inner').style.transform === 'rotateY(180deg)'
+            ? 'rotateY(0deg)' : 'rotateY(180deg)';
+      });
+    });
+  </script>
+</body>
+</html>
